@@ -2,10 +2,13 @@
    Every map widget is an island. */
 
 function initMarkersMap(input_id, map_options) {
-    /* options parameters:
-       input_id {string} id of the input tag where to read my map content
-       map_options {object} options to be passed to map constructor
+    /* Just a summary map that shows a marker for every point saved in the table.
+
+       Options parameters:
+       input_id {string} id of the input tag where to read my map content;
+       map_options {object} options to be passed to map constructor.
     */
+
     epsg4326 = new OpenLayers.Projection("EPSG:4326");
     var map = new OpenLayers.Map( map_options || {} );
     var oslayer = new OpenLayers.Layer.OSM( "Simple OSM Map" );
@@ -36,7 +39,14 @@ function initMarkersMap(input_id, map_options) {
 
 
 function initPointMap(input_id, map_options, view_only){
-    /* With this widget I want add/edit just a single point */
+    /* a widget for add/edit just a single point in my geometry field.
+       Features are read and stored in the specified input tag.
+
+       Options parameters:
+       input_id {string} id of the input tag where to read my map content;
+       map_options {object} options to be passed to map constructor;
+       view_only {boolean} if true map edit controls are not set.
+    */
 
     epsg4326 = new OpenLayers.Projection("EPSG:4326");
     var gjf = new OpenLayers.Format.GeoJSON();
@@ -94,11 +104,10 @@ function initPointMap(input_id, map_options, view_only){
     };
 
     /* Events register */
-    // in this case I want just one point for record
+    // In this case I want just one point for a record.
+    // That's why all features are removed before each time a feature is added.
     vlayer.events.register('beforefeatureadded', vlayer,
         function (e) { vlayer.removeAllFeatures() });
     vlayer.events.register('featureadded', vlayer,
-        function (e) {
-            jQuery( "#"+input_id ).val(gjf.write(vlayer.features))
-        });
+        function (e) { jQuery( "#"+input_id ).val(gjf.write(vlayer.features)) });
 };
