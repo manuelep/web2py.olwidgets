@@ -2,6 +2,9 @@
 # coding: utf8
 from gluon import *
 
+from geojson import FeatureCollection
+from geojson import loads as gjsloads
+from geojson import dumps as gjsdumps
 from json import dumps as jsdumps
 
 plugin_root = 'static/plugin_olwidgets'
@@ -62,16 +65,22 @@ def mapPoint_widget(field, value):
     return injectMap(value, map_id=map_id, input_id=input_id, input_name=field.name,
         input_type=field.type, widget='initPointMap', edit_mode=True)
 
-from geojson import FeatureCollection
-from geojson import loads as gjsloads
-from geojson import dumps as gjsdumps
-from json import dumps as jsdumps
+def checkBeforeLoads(obj):
+    try:
+        res = gjsloads(obj)
+    except TypeError:
+        return obj
+    else:
+        return res
+
+def extract_feature(rows, fieldname='the_geom'):
+    return FeatureCollection(map(lambda row: checkBeforeLoads(row[fieldname])['features'][0], rows))
 
 def featStore(rows, fieldname='the_geom'):
     """
     fieldname (String): name of the table field that contains geojson data
     """
-    collection = FeatureCollection(map(lambda row: gjsloads(row[fieldname])['features'][0], rows))
+    collection = extract_feature(rows, fieldname=fieldname)
     for nn,ff in enumerate(collection["features"]):
         ff['properties']['icon'] = URL(plugin_root, 'openlayers/img/marker-blue.png')
         #if rows[nn].is_active:
@@ -79,6 +88,3 @@ def featStore(rows, fieldname='the_geom'):
         #else:
             #ff['properties']['icon'] = URL(plugin_root, 'openlayers/img/marker.png')
     return gjsdumps(collection)
-
-def extract_feature(rows, fieldname='the_geom'):
-    return FeatureCollection(map(lambda row: gjsloads(row[fieldname])['features'][0], rows))
