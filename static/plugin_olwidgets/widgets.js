@@ -9,8 +9,18 @@ function initMarkersMap(input_id, map_options) {
        map_options {object} options to be passed to map constructor.
     */
 
+    map_options = map_options || {};
+    jQuery.extend(map_options, {controls: [
+            new OpenLayers.Control.TouchNavigation({
+                dragPanOptions: {
+                    enableKinetic: true
+                }
+            }),
+            new OpenLayers.Control.Zoom()
+    ]})
+
     epsg4326 = new OpenLayers.Projection("EPSG:4326");
-    var map = new OpenLayers.Map( map_options || {} );
+    var map = new OpenLayers.Map( map_options );
     var oslayer = new OpenLayers.Layer.OSM( "Simple OSM Map" );
     map.addLayer(oslayer);
 
@@ -57,9 +67,16 @@ function initPointMap(input_id, map_options, view_only){
     var vlayer = new OpenLayers.Layer.Vector( "Editable", { geometryType: OpenLayers.Geometry.Point } );
 
     /* Load data from store input tag */
-    var inputvalue = jQuery( "#"+input_id ).val() || '';
+    var inputvalue = jQuery( "#"+input_id ).val();
     var featureCollection = null;
-    if ( inputvalue!='' ) {
+    if ( typeof inputvalue == 'string' && 
+        inputvalue!='' &&
+        // test if inputvalue is a valid json.
+        // courtesy of: https://github.com/douglascrockford/JSON-js/blob/master/json2.js#L464
+        // from: http://stackoverflow.com/questions/3710204/how-to-check-if-a-string-is-a-valid-json-string-in-javascript-without-using-try
+        (/^[\],:{}\s]*$/.test(inputvalue.replace(/\\["\\\/bfnrtu]/g, '@').
+replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']').
+replace(/(?:^|:|,)(?:\s*\[)+/g, ''))) ) {
         featureCollection = jQuery.parseJSON(inputvalue);
         jQuery( "#"+input_id ).val(featureCollection);
         loadedCollection = gjf.read(featureCollection);
